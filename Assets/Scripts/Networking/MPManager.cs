@@ -94,4 +94,30 @@ public class MPManager : MonoBehaviourPunCallbacks
             photonView.RPC("StartCountdownRPC", RpcTarget.All, countdownTime);
         }
     }
+
+    [PunRPC]
+    private void StartCountdownRPC(int startTime)
+    {
+        StartCoroutine(CountdownCoroutine(startTime));
+    }
+
+    private System.Collections.IEnumerator CountdownCoroutine(int startTime) 
+    {
+        isCountingDown = true;
+        int currentTime = startTime;
+
+        while (currentTime > 0)
+        {
+            countdownText.text = $"Game starts in: {currentTime}";
+            yield return new WaitForSeconds(1);
+            currentTime--;
+        }
+
+        countdownText.text = "Starting game...";
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            PhotonNetwork.LoadLevel("OnlineMatch");
+        }
+    }
 }
