@@ -6,8 +6,7 @@ using TMPro;
 public class MPManager : MonoBehaviourPunCallbacks
 {
     public string GameVersion = "1.0";
-    private static bool isRoomCreated = false;
-    private string roomName = "Room";
+    private string roomName = "DefaultRoom";
 
     [SerializeField] private TextMeshProUGUI playerListText; // UI to display player names
     [SerializeField] private TextMeshProUGUI statusText;     // UI to show status messages
@@ -15,7 +14,6 @@ public class MPManager : MonoBehaviourPunCallbacks
 
     private int countdownTime = 10;
     private bool isCountingDown = false;
-
 
     void Start()
     {
@@ -29,42 +27,39 @@ public class MPManager : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
-        Debug.Log("Connected to Master server. Joining or creating a room...");
-        CheckRoomStatus();
+        Debug.Log("Connected to Master server. Checking for existing rooms...");
+        JoinOrCreateRoom();
     }
 
-    private void CheckRoomStatus()
+    private void JoinOrCreateRoom()
     {
-        if (isRoomCreated)
+        ExitGames.Client.Photon.Hashtable expectedProperties = new ExitGames.Client.Photon.Hashtable
         {
-            Debug.Log("A room exists. Attempting to join...");
-            PhotonNetwork.JoinRandomRoom();
-        }
-        else
-        {
-            Debug.Log("No room exists. Creating a room...");
-            CreateRoom();
-        }
+            { "RoomType", "Lobby" }
+        };
+
+        // Try to join a room with the specific "Lobby" property
+        PhotonNetwork.JoinRandomRoom(expectedProperties, 0);
     }
 
-    private void CreateRoom()
+    public override void OnJoinRandomFailed(short returnCode, string message)
     {
+        Debug.LogWarning("No matching room found. Creating a new room...");
+
+        // Create a new room with custom properties
         RoomOptions options = new RoomOptions
         {
             MaxPlayers = 2,
             IsVisible = true,
             IsOpen = true,
+            CustomRoomProperties = new ExitGames.Client.Photon.Hashtable
+            {
+                { "RoomType", "Lobby" }
+            },
+            CustomRoomPropertiesForLobby = new string[] { "RoomType" } // Allow "RoomType" to be visible in the lobby
         };
 
-        PhotonNetwork.CreateRoom(roomName, options);
-        isRoomCreated = true;
-    }
-
-    
-    public override void OnJoinRandomFailed(short returnCode, string message)
-    {
-        Debug.LogWarning("No random room found. Creating a new room...");
-        CreateRoom();
+        PhotonNetwork.CreateRoom(roomName + Random.Range(0, 10000), options);
     }
 
     public override void OnJoinedRoom()
@@ -84,32 +79,16 @@ public class MPManager : MonoBehaviourPunCallbacks
         Debug.Log($"{newPlayer.NickName} has joined the room.");
         UpdatePlayerListUI();
 
-        // Update status text if room is full
         if (PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
         {
             StartCountdown();
         }
     }
 
-    public override void OnPlayerLeftRoom(Player otherPlayer)
-    {
-        Debug.Log($"{otherPlayer.NickName} has left the room.");
-        UpdatePlayerListUI();
-
-        if (PhotonNetwork.CurrentRoom.PlayerCount == 0 && PhotonNetwork.IsMasterClient)
-        {
-            Debug.Log("All players have left the room. Closing room...");
-            PhotonNetwork.LeaveRoom();
-            isRoomCreated = false;
-        }
-    }
-
     private void UpdatePlayerListUI()
     {
-        // Clear the current player list
         playerListText.text = "Players in Lobby:\n";
 
-        // Add all players in the room
         foreach (Player player in PhotonNetwork.PlayerList)
         {
             playerListText.text += $"{player.NickName}\n";
@@ -131,7 +110,7 @@ public class MPManager : MonoBehaviourPunCallbacks
         StartCoroutine(CountdownCoroutine(startTime));
     }
 
-    private System.Collections.IEnumerator CountdownCoroutine(int startTime) 
+    private System.Collections.IEnumerator CountdownCoroutine(int startTime)
     {
         isCountingDown = true;
         int currentTime = startTime;
@@ -147,7 +126,7 @@ public class MPManager : MonoBehaviourPunCallbacks
 
         if (PhotonNetwork.IsMasterClient)
         {
-            PhotonNetwork.LoadLevel("OnlineMatch");
+            PhotonNetwork.LoadLevel("OnlineMatch"); // Replace with your actual game scene name
         }
     }
 }
