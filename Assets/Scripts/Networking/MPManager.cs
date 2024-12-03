@@ -6,6 +6,7 @@ using TMPro;
 public class MPManager : MonoBehaviourPunCallbacks
 {
     public string GameVersion = "1.0";
+    private static bool isRoomCreated = false;
     private string roomName = "Room";
 
     [SerializeField] private TextMeshProUGUI playerListText; // UI to display player names
@@ -29,25 +30,41 @@ public class MPManager : MonoBehaviourPunCallbacks
     public override void OnConnectedToMaster()
     {
         Debug.Log("Connected to Master server. Joining or creating a room...");
-        JoinOrCreateRoom();
+        CheckRoomStatus();
     }
 
-    private void JoinOrCreateRoom()
+    private void CheckRoomStatus()
     {
-        // Attempt to join a random room
-        PhotonNetwork.JoinRandomRoom();
+        if (isRoomCreated)
+        {
+            Debug.Log("A room exists. Attempting to join...");
+            PhotonNetwork.JoinRandomRoom();
+        }
+        else
+        {
+            Debug.Log("No room exists. Creating a room...");
+            CreateRoom();
+        }
     }
 
+    private void CreateRoom()
+    {
+        RoomOptions options = new RoomOptions
+        {
+            MaxPlayers = 2,
+            IsVisible = true,
+            IsOpen = true,
+        };
+
+        PhotonNetwork.CreateRoom(roomName, options);
+        isRoomCreated = true;
+    }
+
+    
     public override void OnJoinRandomFailed(short returnCode, string message)
     {
         Debug.LogWarning("No random room found. Creating a new room...");
-
-        // Create a new room if no random room is found
-        RoomOptions options = new RoomOptions
-        {
-            MaxPlayers = 2 // Limit the room to 2 players
-        };
-        PhotonNetwork.CreateRoom(roomName + Random.Range(0, 100), options);
+        CreateRoom();
     }
 
     public override void OnJoinedRoom()
@@ -71,6 +88,19 @@ public class MPManager : MonoBehaviourPunCallbacks
         if (PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
         {
             StartCountdown();
+        }
+    }
+
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        Debug.Log($"{otherPlayer.NickName} has left the room.");
+        UpdatePlayerListUI();
+
+        if (PhotonNetwork.CurrentRoom.PlayerCount == 0 && PhotonNetwork.IsMasterClient)
+        {
+            Debug.Log("All players have left the room. Closing room...");
+            PhotonNetwork.LeaveRoom();
+            isRoomCreated = false;
         }
     }
 
