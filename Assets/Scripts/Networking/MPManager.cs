@@ -10,6 +10,11 @@ public class MPManager : MonoBehaviourPunCallbacks
 
     [SerializeField] private TextMeshProUGUI playerListText; // UI to display player names
     [SerializeField] private TextMeshProUGUI statusText;     // UI to show status messages
+    [SerializeField] private TextMeshProUGUI countdownText; // UI for countdown
+
+    private int countdownTime = 10;
+    private bool isCountingDown = false;
+
 
     void Start()
     {
@@ -42,7 +47,7 @@ public class MPManager : MonoBehaviourPunCallbacks
         {
             MaxPlayers = 2 // Limit the room to 2 players
         };
-        PhotonNetwork.CreateRoom(roomName + Random.Range(0, 10000), options);
+        PhotonNetwork.CreateRoom(roomName + Random.Range(0, 100), options);
     }
 
     public override void OnJoinedRoom()
@@ -50,6 +55,11 @@ public class MPManager : MonoBehaviourPunCallbacks
         Debug.Log($"Joined room: {PhotonNetwork.CurrentRoom.Name}");
         UpdatePlayerListUI();
         statusText.text = "Waiting for other players...";
+
+        if (PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
+        {
+            StartCountdown();
+        }
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
@@ -60,7 +70,7 @@ public class MPManager : MonoBehaviourPunCallbacks
         // Update status text if room is full
         if (PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
         {
-            statusText.text = "Game will start shortly...";
+            StartCountdown();
         }
     }
 
@@ -73,6 +83,15 @@ public class MPManager : MonoBehaviourPunCallbacks
         foreach (Player player in PhotonNetwork.PlayerList)
         {
             playerListText.text += $"{player.NickName}\n";
+        }
+    }
+
+    private void StartCountdown()
+    {
+        if (PhotonNetwork.IsMasterClient && !isCountingDown)
+        {
+            Debug.Log("Starting countdown...");
+            photonView.RPC("StartCountdownRPC", RpcTarget.All, countdownTime);
         }
     }
 }
