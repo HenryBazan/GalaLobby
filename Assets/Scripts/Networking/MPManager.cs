@@ -6,13 +6,21 @@ using TMPro;
 public class MPManager : MonoBehaviourPunCallbacks
 {
     public string GameVersion = "1.0";
-    private string roomName = "Room";
+    private string roomName = "GlobalRoom"; // Single persistent room name
 
     [SerializeField] private TextMeshProUGUI playerListText; // UI to display player names
     [SerializeField] private TextMeshProUGUI statusText;     // UI to show status messages
 
+    private bool isTryingToJoinRoom = false; // Prevent multiple room creation attempts
+
     void Start()
     {
+        // Set player nickname
+        if (string.IsNullOrEmpty(PhotonNetwork.NickName))
+        {
+            PhotonNetwork.NickName = PlayerPrefs.GetString("PlayerUsername", "Player" + Random.Range(0, 1000));
+        }
+
         // Connect to Photon if not already connected
         if (!PhotonNetwork.IsConnected)
         {
@@ -23,33 +31,51 @@ public class MPManager : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
-        Debug.Log("Connected to Master server. Joining or creating a room...");
-        JoinOrCreateRoom();
+        Debug.Log("Connected to Master server. Ready to join a room.");
+        statusText.text = "Connected to Photon. Click Online Play to start.";
     }
 
-    private void JoinOrCreateRoom()
+    public void PlayOnlineGame()
     {
-        // Attempt to join a random room
-        PhotonNetwork.JoinRandomRoom();
-    }
+        if (isTryingToJoinRoom) return; // Prevent duplicate join attempts
+        isTryingToJoinRoom = true;
 
-    public override void OnJoinRandomFailed(short returnCode, string message)
-    {
-        Debug.LogWarning("No random room found. Creating a new room...");
+        statusText.text = "Joining or creating a room...";
+        Debug.Log("Attempting to join or create the global room...");
 
-        // Create a new room if no random room is found
         RoomOptions options = new RoomOptions
         {
-            MaxPlayers = 2 // Limit the room to 2 players
+            MaxPlayers = 2,
+            IsVisible = true,
+            IsOpen = true
         };
-        PhotonNetwork.CreateRoom(roomName + Random.Range(0, 10000), options);
+
+        PhotonNetwork.JoinOrCreateRoom(roomName, options, TypedLobby.Default);
     }
 
     public override void OnJoinedRoom()
     {
-        Debug.Log($"Joined room: {PhotonNetwork.CurrentRoom.Name}");
+        Debug.Log($"Successfully joined room: {PhotonNetwork.CurrentRoom.Name}");
+        isTryingToJoinRoom = false;
+
         UpdatePlayerListUI();
         statusText.text = "Waiting for other players...";
+
+        // Check if the room is full
+        if (PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
+        {
+            statusText.text = "Game will start shortly...";
+            StartGame();
+        }
+    }
+
+    public override void OnJoinRoomFailed(short returnCode, string message)
+    {
+        Debug.LogWarning($"Failed to join room: {message}. Retrying...");
+        isTryingToJoinRoom = false;
+
+        // Retry joining the room
+        PlayOnlineGame();
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
@@ -57,22 +83,37 @@ public class MPManager : MonoBehaviourPunCallbacks
         Debug.Log($"{newPlayer.NickName} has joined the room.");
         UpdatePlayerListUI();
 
-        // Update status text if room is full
+        // Start the game when room is full
         if (PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
         {
             statusText.text = "Game will start shortly...";
+            StartGame();
         }
+    }
+
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        Debug.Log($"{otherPlayer.NickName} has left the room.");
+        UpdatePlayerListUI();
+        statusText.text = "Waiting for other players...";
     }
 
     private void UpdatePlayerListUI()
     {
-        // Clear the current player list
         playerListText.text = "Players in Lobby:\n";
 
-        // Add all players in the room
         foreach (Player player in PhotonNetwork.PlayerList)
         {
             playerListText.text += $"{player.NickName}\n";
+        }
+    }
+
+    private void StartGame()
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            // Master Client initiates the game
+            PhotonNetwork.LoadLevel("OnlineMatch"); // Replace with your game scene name
         }
     }
 }
