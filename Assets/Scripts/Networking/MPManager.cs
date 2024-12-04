@@ -6,7 +6,7 @@ using TMPro;
 public class MPManager : MonoBehaviourPunCallbacks
 {
     public string GameVersion = "1.0";
-    private string roomName = "DefaultRoom";
+    private string lobbyName = "GlobalLobby"; // Persistent lobby name
 
     [SerializeField] private TextMeshProUGUI playerListText; // UI to display player names
     [SerializeField] private TextMeshProUGUI statusText;     // UI to show status messages
@@ -17,7 +17,7 @@ public class MPManager : MonoBehaviourPunCallbacks
 
     void Start()
     {
-        // Connect to Photon if not already connected
+        // Connect to Photon when the player logs in
         if (!PhotonNetwork.IsConnected)
         {
             PhotonNetwork.GameVersion = GameVersion;
@@ -27,50 +27,44 @@ public class MPManager : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
-        Debug.Log("Connected to Master server. Checking for existing rooms...");
-        JoinOrCreateRoom();
+        Debug.Log("Connected to Master server.");
+        CreateOrAccessPersistentLobby(); // Ensure a persistent lobby exists
     }
 
-    private void JoinOrCreateRoom()
+    private void CreateOrAccessPersistentLobby()
     {
-        ExitGames.Client.Photon.Hashtable expectedProperties = new ExitGames.Client.Photon.Hashtable
-        {
-            { "RoomType", "Lobby" }
-        };
+        Debug.Log("Creating or ensuring the existence of the global lobby...");
 
-        // Try to join a room with the specific "Lobby" property
-        PhotonNetwork.JoinRandomRoom(expectedProperties, 0);
-    }
-
-    public override void OnJoinRandomFailed(short returnCode, string message)
-    {
-        Debug.LogWarning("No matching room found. Creating a new room...");
-
-        // Create a new room with custom properties
+        // Check if a lobby already exists. If not, create one
         RoomOptions options = new RoomOptions
         {
-            MaxPlayers = 2,
+            MaxPlayers = 2, // Limit the lobby to 2 players
             IsVisible = true,
-            IsOpen = true,
-            CustomRoomProperties = new ExitGames.Client.Photon.Hashtable
-            {
-                { "RoomType", "Lobby" }
-            },
-            CustomRoomPropertiesForLobby = new string[] { "RoomType" } // Allow "RoomType" to be visible in the lobby
+            IsOpen = true
         };
 
-        PhotonNetwork.CreateRoom(roomName + Random.Range(0, 10000), options);
+        PhotonNetwork.CreateRoom(lobbyName, options); // Will fail if the room already exists
+    }
+
+    public override void OnCreateRoomFailed(short returnCode, string message)
+    {
+        Debug.Log("Global lobby already exists. Joining the existing lobby...");
+        PhotonNetwork.JoinRoom(lobbyName); // Join the existing lobby
     }
 
     public override void OnJoinedRoom()
     {
         Debug.Log($"Joined room: {PhotonNetwork.CurrentRoom.Name}");
         UpdatePlayerListUI();
-        statusText.text = "Waiting for other players...";
 
+        // If the lobby is full, start the game
         if (PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
         {
             StartCountdown();
+        }
+        else
+        {
+            statusText.text = "Waiting for other players...";
         }
     }
 
@@ -79,10 +73,19 @@ public class MPManager : MonoBehaviourPunCallbacks
         Debug.Log($"{newPlayer.NickName} has joined the room.");
         UpdatePlayerListUI();
 
+        // Start the game when the lobby is full
         if (PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
         {
             StartCountdown();
         }
+    }
+
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        Debug.Log($"{otherPlayer.NickName} has left the room.");
+        UpdatePlayerListUI();
+        statusText.text = "Waiting for other players...";
+        isCountingDown = false; // Stop countdown if a player leaves
     }
 
     private void UpdatePlayerListUI()
@@ -126,7 +129,15 @@ public class MPManager : MonoBehaviourPunCallbacks
 
         if (PhotonNetwork.IsMasterClient)
         {
+            // Transition both players to the game scene
             PhotonNetwork.LoadLevel("OnlineMatch"); // Replace with your actual game scene name
         }
+    }
+
+    public override void OnDisconnected(DisconnectCause cause)
+    {
+        Debug.LogWarning($"Disconnected from Photon: {cause}");
+        isCountingDown = false;
+        PhotonNetwork.ConnectUsingSettings(); // Reconnect to Photon if disconnected
     }
 }
