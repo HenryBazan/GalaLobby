@@ -6,7 +6,7 @@ using TMPro;
 public class MPManager : MonoBehaviourPunCallbacks
 {
     public string GameVersion = "1.0";
-    private string lobbyName = "GlobalLobby"; // Fixed name for the global lobby
+    private string roomNamePrefix = "Room"; // Prefix for random room names
 
     [SerializeField] private TextMeshProUGUI playerListText; // UI to display player names
     [SerializeField] private TextMeshProUGUI statusText;     // UI to show status messages
@@ -27,34 +27,35 @@ public class MPManager : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
-        Debug.Log("Connected to Master server. Waiting for player action.");
-        statusText.text = "Connected to Photon. Ready to join online play.";
+        Debug.Log("Connected to Master server. Attempting to join a random room...");
+        PhotonNetwork.JoinRandomRoom(); // Try to join an available room
     }
 
-    public void PlayOnlineGame()
+    public override void OnJoinRandomFailed(short returnCode, string message)
     {
-        Debug.Log("Attempting to join or create the global lobby...");
-        statusText.text = "Searching for a lobby...";
-        PhotonNetwork.JoinOrCreateRoom(lobbyName, new RoomOptions
+        Debug.LogWarning("No available rooms found. Creating a new room...");
+
+        // Create a new room with a unique name
+        RoomOptions options = new RoomOptions
         {
-            MaxPlayers = 2, // Limit to 2 players
+            MaxPlayers = 2, // Limit the room to 2 players
             IsVisible = true,
             IsOpen = true
-        }, TypedLobby.Default);
+        };
+
+        string newRoomName = roomNamePrefix + Random.Range(0, 10000);
+        PhotonNetwork.CreateRoom(newRoomName, options);
     }
 
     public override void OnJoinedRoom()
     {
         Debug.Log($"Joined room: {PhotonNetwork.CurrentRoom.Name}");
         UpdatePlayerListUI();
+        statusText.text = "Waiting for other players...";
 
         if (PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
         {
             StartCountdown();
-        }
-        else
-        {
-            statusText.text = "Waiting for other players...";
         }
     }
 
@@ -120,12 +121,5 @@ public class MPManager : MonoBehaviourPunCallbacks
         {
             PhotonNetwork.LoadLevel("OnlineMatch"); // Replace with your actual game scene name
         }
-    }
-
-    public override void OnDisconnected(DisconnectCause cause)
-    {
-        Debug.LogWarning($"Disconnected from Photon: {cause}");
-        isCountingDown = false;
-        PhotonNetwork.ConnectUsingSettings(); // Reconnect to Photon if disconnected
     }
 }
