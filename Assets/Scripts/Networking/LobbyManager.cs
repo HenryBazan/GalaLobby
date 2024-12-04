@@ -1,46 +1,35 @@
 using UnityEngine;
 using TMPro;
 using Photon.Pun;
-using Photon.Realtime;
 
-public class LobbyManager : MonoBehaviourPunCallbacks
+public class LobbyManager : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI playerListText; // UI element for displaying player list
 
     void Start()
     {
-        UpdatePlayerList(); // Initial list update
-    }
-
-    // Called when a player joins the room
-    public override void OnPlayerEnteredRoom(Player newPlayer)
-    {
-        Debug.Log($"{newPlayer.NickName} joined the lobby.");
-        UpdatePlayerList();
-    }
-
-    // Called when a player leaves the room
-    public override void OnPlayerLeftRoom(Player otherPlayer)
-    {
-        Debug.Log($"{otherPlayer.NickName} left the lobby.");
         UpdatePlayerList();
     }
 
     private void UpdatePlayerList()
     {
-        if (!PhotonNetwork.InRoom)
-        {
-            Debug.LogWarning("Not currently in a Photon room.");
-            return;
-        }
-
-        // Clear the player list text
+        // Clear the current player list
         playerListText.text = "Players in Lobby:\n";
 
-        // Add all players in the room
-        foreach (var player in PhotonNetwork.PlayerList)
+        // Add the local player's username from PlayerPrefs
+        string localUsername = PlayerPrefs.GetString("PlayerUsername", "Unknown Player");
+        playerListText.text += $"{localUsername}\n";
+
+        // If using Photon, add other players in the room
+        if (PhotonNetwork.InRoom)
         {
-            playerListText.text += $"{player.NickName}\n";
+            foreach (var player in PhotonNetwork.PlayerList)
+            {
+                if (player.NickName != localUsername) // Avoid duplicate entry
+                {
+                    playerListText.text += $"{player.NickName}\n";
+                }
+            }
         }
     }
 }
