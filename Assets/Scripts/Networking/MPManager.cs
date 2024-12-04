@@ -6,7 +6,7 @@ using TMPro;
 public class MPManager : MonoBehaviourPunCallbacks
 {
     public string GameVersion = "1.0";
-    private string lobbyName = "GlobalLobby"; // Persistent lobby name
+    private string lobbyName = "GlobalLobby"; // Fixed name for the global lobby
 
     [SerializeField] private TextMeshProUGUI playerListText; // UI to display player names
     [SerializeField] private TextMeshProUGUI statusText;     // UI to show status messages
@@ -27,29 +27,20 @@ public class MPManager : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
-        Debug.Log("Connected to Master server.");
-        CreateOrAccessPersistentLobby(); // Ensure a persistent lobby exists
+        Debug.Log("Connected to Master server. Waiting for player action.");
+        statusText.text = "Connected to Photon. Ready to join online play.";
     }
 
-    private void CreateOrAccessPersistentLobby()
+    public void PlayOnlineGame()
     {
-        Debug.Log("Creating or ensuring the existence of the global lobby...");
-
-        // Check if a lobby already exists. If not, create one
-        RoomOptions options = new RoomOptions
+        Debug.Log("Attempting to join or create the global lobby...");
+        statusText.text = "Searching for a lobby...";
+        PhotonNetwork.JoinOrCreateRoom(lobbyName, new RoomOptions
         {
-            MaxPlayers = 2, // Limit the lobby to 2 players
+            MaxPlayers = 2, // Limit to 2 players
             IsVisible = true,
             IsOpen = true
-        };
-
-        PhotonNetwork.CreateRoom(lobbyName, options); // Will fail if the room already exists
-    }
-
-    public override void OnCreateRoomFailed(short returnCode, string message)
-    {
-        Debug.Log("Global lobby already exists. Joining the existing lobby...");
-        PhotonNetwork.JoinRoom(lobbyName); // Join the existing lobby
+        }, TypedLobby.Default);
     }
 
     public override void OnJoinedRoom()
@@ -57,7 +48,6 @@ public class MPManager : MonoBehaviourPunCallbacks
         Debug.Log($"Joined room: {PhotonNetwork.CurrentRoom.Name}");
         UpdatePlayerListUI();
 
-        // If the lobby is full, start the game
         if (PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
         {
             StartCountdown();
@@ -73,7 +63,6 @@ public class MPManager : MonoBehaviourPunCallbacks
         Debug.Log($"{newPlayer.NickName} has joined the room.");
         UpdatePlayerListUI();
 
-        // Start the game when the lobby is full
         if (PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
         {
             StartCountdown();
@@ -129,7 +118,6 @@ public class MPManager : MonoBehaviourPunCallbacks
 
         if (PhotonNetwork.IsMasterClient)
         {
-            // Transition both players to the game scene
             PhotonNetwork.LoadLevel("OnlineMatch"); // Replace with your actual game scene name
         }
     }
