@@ -54,7 +54,18 @@ public class DiamondSpawnerOnline : MonoBehaviour
             for (int i = 0; i < numberOfDiamonds; i++)
             {
               Debug.Log("Placing Diamonds");
-                PhotonNetwork.Instantiate("DiamondPrefab/Diamond", GetRandomPositionWithinBounds(), Quaternion.identity);
+                GameObject diamond = PhotonNetwork.InstantiateRoomObject("DiamondPrefab/Diamond", GetRandomPositionWithinBounds(), Quaternion.identity);
+                DiamondLogic ownership = diamond.GetComponent<DiamondLogic>();
+                if (ownership != null){
+                  ownership.IsClaimed = false; // Mark diamond as unclaimed initially
+                }
+
+                PhotonView diamondPV = diamond.GetComponent<PhotonView>();
+                if(diamondPV != null){
+                  Debug.LogError($"Diamond {i + 1} PhotonView ID: {diamondPV.ViewID}");
+                } else {
+                  Debug.LogError($"Diamond {i +1} does not have a PhotonView component");
+                }
             }
 
             //diamonds = GameObject.FindGameObjectsWithTag("Diamond");
@@ -76,7 +87,19 @@ public class DiamondSpawnerOnline : MonoBehaviour
         diamondPrefab.transform.SetParent(null);
         Debug.Log($"Respawning diamond within the bounds :Min {combinedBounds.min}, Max {combinedBounds.max}");
         diamondPrefab.transform.position = GetRandomPositionWithinBounds();
-    }
+        Vector3 newPosition = GetRandomPositionWithinBounds();
+       diamondPrefab.transform.position = newPosition;
+
+       PhotonView diamondPV = diamondPrefab.GetComponent<PhotonView>();
+       if (diamondPV != null)
+       {
+           diamondPV.RPC("SyncDiamondPosition", RpcTarget.All, newPosition);
+       }
+       else
+       {
+           Debug.LogError("Problems with respawning diamond: PhotonView not found.");
+       }
+   }
 
     Vector3 GetRandomPositionWithinBounds()
     {

@@ -4,6 +4,9 @@ public class Bullet : MonoBehaviour
 {
     public float speed = 20f;
     public float lifetime = 2f;
+    public GameObject shooter;
+
+    public string bulletTag;
 
     void Start()
     {
@@ -17,19 +20,30 @@ public class Bullet : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collider)
     {
-        if (collider.CompareTag("Player"))
+        if (collider.CompareTag("Area") || collider.gameObject == shooter)
         {
-            // Example: Call a method on the player script to handle damage
+            return;
+        }
+
+        if (collider.CompareTag("Player1"))
+        {
             PlayerHealth playerHealth = collider.GetComponent<PlayerHealth>();
             if (playerHealth != null)
             {
-                playerHealth.TakeDamage(1); // Adjust damage as needed
+                playerHealth.TakeDamage(10);
             }
-            Destroy(gameObject); // Destroy bullet after hitting a player
-            return; // Ignore collisions with players
         }
 
-        Destroy(gameObject); // Destroy bullet on hit with other objects
+        if(collider.CompareTag("Enemy") && bulletTag == "PlayerBullet")
+        {
+            EnemyDamage enemyH = collider.GetComponent<EnemyDamage>();
+            if(enemyH != null)
+            {
+                enemyH.TakeDamage();
+            }
+        }
+
+        Destroy(gameObject);
     }
 
 }

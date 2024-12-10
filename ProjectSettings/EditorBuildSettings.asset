@@ -12,11 +12,8 @@ EditorBuildSettings:
     path: Assets/Scenes/Main Menu.unity
     guid: ec3d533af9881aa4399a7b08eb66561d
   - enabled: 1
-    path: Assets/Scenes/Local Game.unity
+    path: Assets/Scenes/SampleScene 1.unity
     guid: bf9aede8de96d9948934b5015a77ed54
-  - enabled: 1
-    path: Assets/Scenes/LobbyScene.unity
-    guid: dc1e6a17e9155c54ba28c1b7db82f106
   - enabled: 1
     path: Assets/Scenes/OnlineMatch.unity
     guid: 40573c3141760448288be19b514cf0de

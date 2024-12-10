@@ -804,7 +804,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.70000076, y: -11.799999}
+  m_AnchoredPosition: {x: 0.7000122, y: -11.799973}
   m_SizeDelta: {x: 211.8969, y: 120.2918}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &343322261
@@ -3795,7 +3795,7 @@ RectTransform:
   m_GameObject: {fileID: 1571108921}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -0.1203}
-  m_LocalScale: {x: 0.8150915, y: 0.8150915, z: 0.8150915}
+  m_LocalScale: {x: 1.6629732, y: 1.6629732, z: 1.6629732}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 343322260}
@@ -3803,7 +3803,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -234, y: 48}
+  m_AnchoredPosition: {x: -29.032, y: 37.587}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1684611542
@@ -3855,10 +3855,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1980, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -3921,13 +3921,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76ea2c078dbb4497caa4d0ced35567e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  signUpTab: {fileID: 1911371194}
-  logInTab: {fileID: 1357628443}
-  username: {fileID: 325803564}
-  userEmail: {fileID: 1150540011}
-  UserPassword: {fileID: 152446311}
-  userEmailLogin: {fileID: 843837407}
-  UserPasswordLogin: {fileID: 1793937356}
+  signUpTab: {fileID: 0}
+  logInTab: {fileID: 0}
+  username: {fileID: 0}
+  userEmail: {fileID: 0}
+  UserPassword: {fileID: 0}
+  userEmailLogin: {fileID: 0}
+  UserPasswordLogin: {fileID: 0}
 --- !u!1 &1697538095
 GameObject:
   m_ObjectHideFlags: 0
@@ -3988,7 +3988,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: -3934114456177480161, guid: 5993056fc0c33a04994eeb0ef2b6b4fb, type: 3}
+  m_Sprite: {fileID: 5887580067942063912, guid: e964ac0e6b2739944bea40cef0e4667e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -4009,7 +4009,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 528, y: 286, z: 0}
-  m_LocalScale: {x: 18.34265, y: 18.34265, z: 18.34265}
+  m_LocalScale: {x: 26.675072, y: 26.675072, z: 26.675072}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}

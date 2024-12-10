@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 3817974423396199515}
   - component: {fileID: 322113415660467522}
   - component: {fileID: -826934112280267788}
+  - component: {fileID: -3754573791615417738}
   m_Layer: 0
   m_Name: Diamond
   m_TagString: Diamond
@@ -183,9 +184,21 @@ MonoBehaviour:
   Group: 0
   prefixField: -1
   Synchronization: 3
-  OwnershipTransfer: 0
+  OwnershipTransfer: 1
   observableSearch: 2
   ObservedComponents: []
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
+--- !u!114 &-3754573791615417738
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5487419869508636664}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fa87379638b8471eb602ff909c24c0e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

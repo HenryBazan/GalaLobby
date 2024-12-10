@@ -10,6 +10,10 @@ TagManager:
   - InnerWall
   - Player1
   - Player2
+  - Bullet
+  - Enemy
+  - PlayerBullet
+  - EnemyBullet
   layers:
   - Default
   - TransparentFX
@@ -20,7 +24,7 @@ TagManager:
   - 
   - 
   - Post processing
-  - 
+  - Enemy
   - 
   - 
   - 

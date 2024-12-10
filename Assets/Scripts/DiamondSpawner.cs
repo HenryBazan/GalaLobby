@@ -6,6 +6,7 @@ public class DiamondSpawner : MonoBehaviour
     public int numberOfDiamonds = 4;
     private Bounds combinedBounds;
     public float margin = 0.5f;
+    public float minDistanceFromEnemies = 1f; 
 
     void Start()
     {
@@ -47,7 +48,7 @@ public class DiamondSpawner : MonoBehaviour
             int toInstantiate = numberOfDiamonds - diamonds.Length;
             for (int i = 0; i < toInstantiate; i++)
             {
-                Instantiate(diamondPrefab, GetRandomPositionWithinBounds(), Quaternion.identity);
+                Instantiate(diamondPrefab, GetValidRandomPosition(), Quaternion.identity);
             }
 
             diamonds = GameObject.FindGameObjectsWithTag("Diamond");
@@ -57,7 +58,7 @@ public class DiamondSpawner : MonoBehaviour
         {
             if (i < diamonds.Length)
             {
-                diamonds[i].transform.position = GetRandomPositionWithinBounds();
+                diamonds[i].transform.position = GetValidRandomPosition();
             }
         }
     }
@@ -66,14 +67,37 @@ public class DiamondSpawner : MonoBehaviour
     {
         diamond.GetComponent<Collider2D>().enabled = true;
         diamond.GetComponent<Rigidbody2D>().isKinematic = true;
-        diamond.transform.SetParent(null); 
-        diamond.transform.position = GetRandomPositionWithinBounds(); 
+        diamond.transform.SetParent(null);
+        diamond.transform.position = GetValidRandomPosition();
     }
 
-    Vector3 GetRandomPositionWithinBounds()
+    Vector3 GetValidRandomPosition()
     {
-        float x = Random.Range(combinedBounds.min.x, combinedBounds.max.x);
-        float y = Random.Range(combinedBounds.min.y, combinedBounds.max.y);
-        return new Vector3(x, y, 0f);
+        Vector3 randomPosition;
+        bool validPosition = false;
+
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+
+        do
+        {
+            randomPosition = new Vector3(
+                Random.Range(combinedBounds.min.x, combinedBounds.max.x),
+                Random.Range(combinedBounds.min.y, combinedBounds.max.y),
+                0f);
+
+            validPosition = true;
+
+            foreach (GameObject enemy in enemies)
+            {
+                if (Vector3.Distance(randomPosition, enemy.transform.position) < minDistanceFromEnemies)
+                {
+                    validPosition = false;
+                    break;
+                }
+            }
+
+        } while (!validPosition);
+
+        return randomPosition;
     }
 }
